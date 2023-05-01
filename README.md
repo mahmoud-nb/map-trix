@@ -42,7 +42,6 @@ mapTrix.addMarker(point)
 const point2 = {
     latitude: 48.87574, 
     longitude: 2.29517, 
-    title: 'infoWindow title', 
     content: 'infoWindow content'
 }
 mapTrix.addMarker(point2, true)

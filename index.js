@@ -33,7 +33,7 @@ const defaultMapOptions = {
     disableDefaultUI: false,
     //zoomControl: true,
     //zoomControlOptions: {style: google.maps.ZoomControlStyle.SMALL},
-};
+}
 
 const defaultMarkerOptions = {}
 
@@ -69,17 +69,16 @@ export class MapTrix {
             ...config,
         }
 
+        const latitude = customMapOptions?.center?.latitude || defaultMapOptions.center.latitude
+        const longitude = customMapOptions?.center?.longitude || defaultMapOptions.center.longitude
+
         this.mapOptions = {
             ...defaultMapOptions,
-            center: this.point(customMapOptions?.center?.latitude && customMapOptions?.center?.longitude ? {
-                ...ustomMapOptions.center
-            } : {
-                ...defaultMapOptions.center
-            }),
+            center: this.point(latitude, longitude),
             ...customMapOptions,
         }
 
-        this.mapEl = document.querySelector(mapElSelector);
+        this.mapEl = document.querySelector(mapElSelector)
 
         this.map = new google.maps.Map(this.mapEl, this.mapOptions)
 
@@ -97,19 +96,19 @@ export class MapTrix {
         try {
             
             if(options.latitude && options.langitude) {
-                options.center = this.point({latitude: options.latitude, langitude: options.langitude});
+                options.center = this.point(options.latitude, options.langitude)
             }
 
-            options.zoom = parseInt(options.zoom);
+            options.zoom = parseInt(options.zoom)
 
-            this.map.setOptions(options);
+            this.map.setOptions(options)
         }catch (e) {
-            console.log( 'Exception', e );
+            console.log( 'Exception', e )
         }
     }
 
-    point(p) {
-        return new google.maps.LatLng(p.latitude, p.longitude)
+    point(latitude, longitude) {
+        return new google.maps.LatLng(latitude, longitude)
     }
 
     // MARKERS ##############################################
@@ -129,13 +128,13 @@ export class MapTrix {
 
             const marker = new google.maps.Marker(this.markerOptions)
 
-            this.markers.push(marker);
+            this.markers.push(marker)
 
             if(enableInfoWindow) {
                 const infoWindow = this.createInfoWindow(options)
 
                 if(infoWindow)
-                    google.maps.event.addListener(marker, 'click', this.openInfoWindow(infoWindow, marker));
+                    google.maps.event.addListener(marker, 'click', this.openInfoWindow(infoWindow, marker))
             }
 
             if (this.config.enableBounds){
@@ -157,7 +156,7 @@ export class MapTrix {
 	 */
     clearMarkers () {
         this.markers.forEach(marker => this.deleteMarker(marker))
-		this.markers = []
+        this.markers = []
     }
 
     // InfoWindow ############################################
@@ -170,7 +169,7 @@ export class MapTrix {
     createInfoWindow(data) {
         if(!data) return null
 
-        const infoWindow = new google.maps.InfoWindow({ title: data.title, content: data.content });
+        const infoWindow = new google.maps.InfoWindow({ content: data.content })
 
         google.maps.event.addListener(infoWindow, 'closeclick', this.closeInfoWindow(infoWindow))
 
@@ -206,9 +205,9 @@ export class MapTrix {
 
     // Bounds ######################################################
     boundsMarkers() {
-    	if(!this.bounds)
-    		this.bounds = new google.maps.LatLngBounds()
-    	
+        if(!this.bounds)
+            this.bounds = new google.maps.LatLngBounds()
+
         if (this.markers.length > 0) {
             this.markers.forEach(marker => {
                 const position = new google.maps.LatLng(marker.latitude, marker.longitude)
@@ -228,10 +227,10 @@ export class MapTrix {
     traceDirection(start, end, travelMode = 'DRIVING') {
 
         if (this.directionsService == null) {
-			this.directionsService = new google.maps.DirectionsService();
-			this.directionsRenderer = new google.maps.DirectionsRenderer();
-			this.directionsRenderer.setMap(this.map);
-		}
+            this.directionsService = new google.maps.DirectionsService()
+            this.directionsRenderer = new google.maps.DirectionsRenderer()
+            this.directionsRenderer.setMap(this.map)
+        }
 
         return new Promise((resolve, reject) => {    
             
@@ -246,7 +245,7 @@ export class MapTrix {
                 }
                 this.directionsService.route(request, (result, status) => {
                     if (status == 'OK') {
-                        this.directionsRenderer.setDirections(result);
+                        this.directionsRenderer.setDirections(result)
                         resolve(result)
                     }
                 })
