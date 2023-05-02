@@ -3,7 +3,8 @@ const defaultOptions = {
     version: "weekly",
 }
 
-export async function _loadGoogleMapsScript(API_KEY = null, options = defaultOptions, callback = null) {
+
+export async function _loadGoogleMapsScript(API_KEY: string = null, options = defaultOptions, callback: any = null) {
     
     const googleLib = 'https://maps.googleapis.com/maps/api/js'
     API_KEY = API_KEY ?? localStorage.getItem('g_api_key')
@@ -16,10 +17,10 @@ export async function _loadGoogleMapsScript(API_KEY = null, options = defaultOpt
      
 
     await _loadScript(googleLibPath)
-    if (callback) callback()
+    if (typeof callback === 'function') callback();
 }
 
-export function _loadScript(src) {
+export function _loadScript(src: string) {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script')
         script.type = 'text/javascript'

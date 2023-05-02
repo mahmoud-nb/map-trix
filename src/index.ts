@@ -1,8 +1,11 @@
 import { _loadGoogleMapsScript } from './utils/loader'
+import { Position } from './types/position.d' 
 
 const defaultOptions = {
-    language: 'fr'
+    language: 'fr',
+    version: "weekly",
 }
+
 
 /**
  * 
@@ -10,10 +13,11 @@ const defaultOptions = {
  * @param {Object} options 
  * @returns {MapTrix} MapTrix instance
  */
-export async function createMapTrix(API_KEY = null, { language = 'en'} = {}) {
+export async function createMapTrix(API_KEY:string = null, { language = 'en', version = "weekly"} = {}) {
     if (typeof google == 'undefined') {
         const options = {
             language,
+            version,
         }
         await _loadGoogleMapsScript(API_KEY, options)
         return new MapTrix()
@@ -39,30 +43,30 @@ const defaultMarkerOptions = {}
 
 export class MapTrix {
 
-    config = {}
+    config:any = {}
 
-    mapEl = null
+    mapEl:HTMLElement = null
 
-    map = null
-    mapOptions = {}
+    map:google.maps.Map = null
+    mapOptions:google.maps.MapOptions = {}
 
-    markers = []
-    markerOptions = {}
+    markers:Array<google.maps.Marker> = []
+    markerOptions:google.maps.MarkerOptions = {}
 
-    currentInfoWindow = null
+    currentInfoWindow:google.maps.InfoWindow = null
 
-    bounds = null
+    bounds:google.maps.LatLngBounds = null
 
-    directionsService = null
-    directionsRenderer = null
+    directionsService:google.maps.DirectionsService = null
+    directionsRenderer:google.maps.DirectionsRenderer = null
 
-    constructor (API_KEY = null) {
+    constructor (API_KEY:string = null) {
 
         if (typeof google == 'undefined') 
             _loadGoogleMapsScript(API_KEY, defaultOptions)
     }
 
-    init(mapElSelector = '#mapContainer', customMapOptions = {}, config = {}) {
+    init(mapElSelector:string = '#mapContainer', customMapOptions:any = {}, config:any = {}) {
         
         this.config = {
             ...defaultConfig,
@@ -90,24 +94,22 @@ export class MapTrix {
 
     /**
 	 * Set map options
-     * @param {Object} options
+     * @param {google.maps.MapOptions} options
 	 */
-    setMapOptions(options) {
+    setMapOptions(options:any) {
         try {
             
             if(options.latitude && options.langitude) {
-                options.center = this.point(options.latitude, options.langitude)
+                options.center = this.point(options.latitude, options.langitude);
             }
 
-            options.zoom = parseInt(options.zoom)
-
-            this.map.setOptions(options)
+            this.map.setOptions(options);
         }catch (e) {
             console.log( 'Exception', e )
         }
     }
 
-    point(latitude, longitude) {
+    point(latitude:number, longitude:number) {
         return new google.maps.LatLng(latitude, longitude)
     }
 
@@ -117,7 +119,7 @@ export class MapTrix {
 	 * @param {Object} options : object{ title, content, latitude, longitude, draggable, icon ... }
      * @param {Boolean} enableInfoWindow
 	 */
-    addMarker(options = null, enableInfoWindow = false) {
+    addMarker(options:any = null, enableInfoWindow:Boolean = false) {
         if(options && options?.latitude && typeof options?.longitude) {
             this.markerOptions = {
                 ...defaultMarkerOptions,
@@ -138,7 +140,7 @@ export class MapTrix {
             }
 
             if (this.config.enableBounds){
-                this.bounds.extend(marker.position)
+                this.bounds.extend(marker.getPosition())
                 this.map.fitBounds(this.bounds)
             }
         }
@@ -147,7 +149,7 @@ export class MapTrix {
     /**
 	 * Delete Marker
 	 */
-    deleteMarker(marker) {
+    deleteMarker(marker:google.maps.Marker) {
         marker.setMap(null)
     }
 
@@ -166,7 +168,7 @@ export class MapTrix {
      * @param {Object} data 
      * @returns {InfoWindow}
      */
-    createInfoWindow(data) {
+    createInfoWindow(data:any):google.maps.InfoWindow {
         if(!data) return null
 
         const infoWindow = new google.maps.InfoWindow({ content: data.content })
@@ -181,7 +183,7 @@ export class MapTrix {
      * @param {InfoWindow} infoWindow 
      * @param {Marker} marker  
      */
-    openInfoWindow(infoWindow, marker) {
+    openInfoWindow(infoWindow:google.maps.InfoWindow, marker:google.maps.Marker) {
         return () => {
             // Close the last selected marker before opening this one.
             if (this.currentInfoWindow) {
@@ -197,7 +199,7 @@ export class MapTrix {
 	 * Close InfoWindow
      * @param {InfoWindow} infoWindow 
 	 */
-    closeInfoWindow(infoWindow) {
+    closeInfoWindow(infoWindow:google.maps.InfoWindow) {
         return () => {
             infoWindow.close()
         }
@@ -209,22 +211,19 @@ export class MapTrix {
             this.bounds = new google.maps.LatLngBounds()
 
         if (this.markers.length > 0) {
-            this.markers.forEach(marker => {
-                const position = new google.maps.LatLng(marker.latitude, marker.longitude)
-                this.bounds.extend(position)
-            })
+            this.markers.forEach(marker => this.bounds.extend(marker.getPosition()))
             this.map.fitBounds(this.bounds)
         }
     }
 
     // Direction ####################################################
     /**
-     * 
-     * @param {String|{latitude, longitude}} start 
-     * @param {String|{latitude, longitude}} end 
+     * string|google.maps.LatLng|google.maps.Place|google.maps.LatLngLiteral|Position
+     * @param {String|Position} start 
+     * @param {String|Position} end 
      * @param {String} travelMode   // DRIVING | BICYCLING | TRANSIT | WALKING | TWO_WHEELER
      */
-    traceDirection(start, end, travelMode = 'DRIVING') {
+    traceDirection(start:any, end:any, travelMode = 'DRIVING') {
 
         if (this.directionsService == null) {
             this.directionsService = new google.maps.DirectionsService()
@@ -235,13 +234,14 @@ export class MapTrix {
         return new Promise((resolve, reject) => {    
             
             try {
-                const origin = start.latitude && start.longitude ? new google.maps.LatLng(start.latitude, start.longitude) : start
-                const destination = end.longitude && end.longitude ? new google.maps.LatLng(end.latitude, end.longitude)  : end
+                const origin:string|google.maps.LatLng|google.maps.Place|google.maps.LatLngLiteral = start.latitude && start.longitude ? this.point(start.latitude, start.longitude) : start
+                const destination:string|google.maps.LatLng|google.maps.Place|google.maps.LatLngLiteral = end.longitude && end.longitude ? this.point(end.latitude, end.longitude)  : end
     
-                const request = {
+                const request:google.maps.DirectionsRequest = {
                     origin,
                     destination,
-                    travelMode: google.maps.TravelMode[travelMode],
+                    // @ts-ignore
+                    travelMode: <google.maps.TravelMode>google.maps.TravelMode[travelMode],
                 }
                 this.directionsService.route(request, (result, status) => {
                     if (status == 'OK') {
