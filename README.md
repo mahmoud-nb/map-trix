@@ -16,7 +16,7 @@ Load the lib and create an instance
 import { createMapTrix } from 'map-trix'
 
 // Google Maps lib options
-const options = { language: 'en', /* TODO */ }
+const options = { language: 'en', version: 'weekly', /* TODO : to be completed */ }
 
 /**
  * Load the lib and create an instance
@@ -57,4 +57,17 @@ Create route between two points
  * @param {String|{latitude, longitude}} destination
  */
 mapTrix.traceDirection(point1, point2).then( successResponse => /* Your code here */ )
+```
+
+Load current location
+```javascript 
+/**
+ * Load current user position
+ * @param {enableHighAccuracy = true, timeout = 5000, maximumAge = 0}
+ */
+mapTrix.getCurrentPosition().then( res => {
+    // Your code here...
+    // for example
+    mapTrix.addMarker({latitude: res.coords.latitude, longitude: res.coords.longitude, content: 'My position'}, true)
+})
 ```

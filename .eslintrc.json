@@ -3,16 +3,21 @@
         "browser": true,
         "es2021": true
     },
-    "extends": "eslint:recommended",
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
     "overrides": [
     ],
+    "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "ecmaVersion": "latest",
         "sourceType": "module"
     },
-    "globals": {
-        "google": "readonly"
-    },
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "ignorePatterns": ["**/dist/**/*.js"],
     "rules": {
         "indent": [
             "error",

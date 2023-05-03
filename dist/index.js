@@ -9,7 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { _loadGoogleMapsScript } from './utils/loader';
 const defaultOptions = {
-    language: 'fr'
+    language: 'fr',
+    version: 'weekly',
 };
 /**
  *
@@ -17,11 +18,12 @@ const defaultOptions = {
  * @param {Object} options
  * @returns {MapTrix} MapTrix instance
  */
-export function createMapTrix(API_KEY = null, { language = 'en' } = {}) {
+export function createMapTrix(API_KEY = null, { language = 'en', version = 'weekly' } = {}) {
     return __awaiter(this, void 0, void 0, function* () {
         if (typeof google == 'undefined') {
             const options = {
                 language,
+                version,
             };
             yield _loadGoogleMapsScript(API_KEY, options);
             return new MapTrix();
@@ -92,11 +94,10 @@ export class MapTrix {
      * @param {Object} options : object{ title, content, latitude, longitude, draggable, icon ... }
      * @param {Boolean} enableInfoWindow
      */
-    addMarker(options = null, enableInfoWindow = false) {
-        if (options && (options === null || options === void 0 ? void 0 : options.latitude) && typeof (options === null || options === void 0 ? void 0 : options.longitude)) {
+    addMarker(options, enableInfoWindow = false) {
+        if ((options === null || options === void 0 ? void 0 : options.latitude) && typeof (options === null || options === void 0 ? void 0 : options.longitude)) {
             this.markerOptions = Object.assign(Object.assign(Object.assign({}, defaultMarkerOptions), options), { map: this.map, position: new google.maps.LatLng(options.latitude, options.longitude) });
             const marker = new google.maps.Marker(this.markerOptions);
-            console.log('OK ADD MARKER');
             this.markers.push(marker);
             if (enableInfoWindow) {
                 const infoWindow = this.createInfoWindow(options);
@@ -131,7 +132,7 @@ export class MapTrix {
     createInfoWindow(data) {
         if (!data)
             return null;
-        const infoWindow = new google.maps.InfoWindow({ content: data.content + '!!!!!' });
+        const infoWindow = new google.maps.InfoWindow({ content: data.content });
         google.maps.event.addListener(infoWindow, 'closeclick', this.closeInfoWindow(infoWindow));
         return infoWindow;
     }
@@ -171,11 +172,11 @@ export class MapTrix {
     // Direction ####################################################
     /**
      * string|google.maps.LatLng|google.maps.Place|google.maps.LatLngLiteral|Position
-     * @param {String|Position} start
-     * @param {String|Position} end
+     * @param {String} start
+     * @param {String} end
      * @param {String} travelMode   // DRIVING | BICYCLING | TRANSIT | WALKING | TWO_WHEELER
      */
-    traceDirection(start, end, travelMode = 'DRIVING') {
+    traceDirection(start, end, travelMode = google.maps.TravelMode.DRIVING) {
         if (this.directionsService == null) {
             this.directionsService = new google.maps.DirectionsService();
             this.directionsRenderer = new google.maps.DirectionsRenderer();
@@ -188,7 +189,6 @@ export class MapTrix {
                 const request = {
                     origin,
                     destination,
-                    // @ts-ignore
                     travelMode: google.maps.TravelMode[travelMode],
                 };
                 this.directionsService.route(request, (result, status) => {
