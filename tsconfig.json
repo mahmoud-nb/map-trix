@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "outDir": "dist",
+        "target": "ES2015",
+        "noEmitOnError": true,
+        "strict": true,
+        "strictNullChecks": false
+    },
+    "files": [
+        "src/index.ts"
+    ]
+}
