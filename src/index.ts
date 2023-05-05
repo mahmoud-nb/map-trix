@@ -30,7 +30,7 @@ const defaultConfig = {
 }
 
 const defaultMapOptions = {
-    center: { latitude: 48.92340114684859, longitude: 2.259291646326453 },
+    center: { lat: 48.92340114684859, lng: 2.259291646326453 },
     zoom: 9,
     minZoom: 2,
     disableDefaultUI: false,
@@ -66,14 +66,16 @@ export class MapTrix {
     }
 
     init(mapElSelector = '#mapContainer', customMapOptions:any = {}, config:any = {}) {
+        
+        if (this.map !== null) throw new Error('a map is already loaded for this instance!')
 
         this.config = {
             ...defaultConfig,
             ...config,
         }
 
-        const latitude = customMapOptions?.center?.latitude || defaultMapOptions.center.latitude
-        const longitude = customMapOptions?.center?.longitude || defaultMapOptions.center.longitude
+        const latitude = customMapOptions?.center?.lat || defaultMapOptions.center.lat
+        const longitude = customMapOptions?.center?.lng || defaultMapOptions.center.lng
 
         this.mapOptions = {
             ...defaultMapOptions,
@@ -81,15 +83,20 @@ export class MapTrix {
             ...customMapOptions,
         }
 
-        this.mapEl = document.querySelector(mapElSelector)
+        const $mapElSelector = <HTMLElement>document.querySelector(mapElSelector)
 
-        this.map = new google.maps.Map(this.mapEl, this.mapOptions)
+        if ($mapElSelector) {
+            this.mapEl = $mapElSelector
 
-        if (this.config.enableBounds){
-            this.bounds = google.maps ? new google.maps.LatLngBounds() : null
+            this.map = new google.maps.Map(this.mapEl, this.mapOptions)
+    
+            if (this.config.enableBounds){
+                this.bounds = google.maps ? new google.maps.LatLngBounds() : null
+            }
+        } else {
+            throw new Error('Map container element not found')
         }
     }
-
 
     /**
 	 * Set map options

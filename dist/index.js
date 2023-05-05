@@ -35,7 +35,7 @@ const defaultConfig = {
     enableBounds: false,
 };
 const defaultMapOptions = {
-    center: { latitude: 48.92340114684859, longitude: 2.259291646326453 },
+    center: { lat: 48.92340114684859, lng: 2.259291646326453 },
     zoom: 9,
     minZoom: 2,
     disableDefaultUI: false,
@@ -60,14 +60,22 @@ export class MapTrix {
     }
     init(mapElSelector = '#mapContainer', customMapOptions = {}, config = {}) {
         var _a, _b;
+        if (this.map !== null)
+            throw new Error('a map is already loaded for this instance!');
         this.config = Object.assign(Object.assign({}, defaultConfig), config);
-        const latitude = ((_a = customMapOptions === null || customMapOptions === void 0 ? void 0 : customMapOptions.center) === null || _a === void 0 ? void 0 : _a.latitude) || defaultMapOptions.center.latitude;
-        const longitude = ((_b = customMapOptions === null || customMapOptions === void 0 ? void 0 : customMapOptions.center) === null || _b === void 0 ? void 0 : _b.longitude) || defaultMapOptions.center.longitude;
+        const latitude = ((_a = customMapOptions === null || customMapOptions === void 0 ? void 0 : customMapOptions.center) === null || _a === void 0 ? void 0 : _a.lat) || defaultMapOptions.center.lat;
+        const longitude = ((_b = customMapOptions === null || customMapOptions === void 0 ? void 0 : customMapOptions.center) === null || _b === void 0 ? void 0 : _b.lng) || defaultMapOptions.center.lng;
         this.mapOptions = Object.assign(Object.assign(Object.assign({}, defaultMapOptions), { center: this.point(latitude, longitude) }), customMapOptions);
-        this.mapEl = document.querySelector(mapElSelector);
-        this.map = new google.maps.Map(this.mapEl, this.mapOptions);
-        if (this.config.enableBounds) {
-            this.bounds = google.maps ? new google.maps.LatLngBounds() : null;
+        const $mapElSelector = document.querySelector(mapElSelector);
+        if ($mapElSelector) {
+            this.mapEl = $mapElSelector;
+            this.map = new google.maps.Map(this.mapEl, this.mapOptions);
+            if (this.config.enableBounds) {
+                this.bounds = google.maps ? new google.maps.LatLngBounds() : null;
+            }
+        }
+        else {
+            throw new Error('Map container element not found');
         }
     }
     /**

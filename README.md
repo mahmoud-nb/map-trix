@@ -7,7 +7,7 @@ This module provides an easy to use interface that allows to load and use Google
 Available via npm as the package [Map Trix](https://www.npmjs.com/package/map-trix).
 
 ```sh
-npm i map-trix
+npm install map-trix
 ```
 
 ## Documentation and Usage
@@ -20,8 +20,9 @@ const options = { language: 'en', version: 'weekly', /* TODO : to be completed *
 
 /**
  * Load the lib and create an instance
- * @param {String} API_KEY : Your Google API Key
- * @param {Object} options : language (default = 'en')
+ * @param {string} API_KEY : Your Google API Key
+ * @param {object} options : { center: { lat: 0, lng: 0 }, zoom: 5 ... }
+ * @param {object} config : { enableBounds: false }
  * @returns : MapTrix instance
  */ 
 const mapTrix = await createMapTrix(API_KEY, options)
