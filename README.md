@@ -1,5 +1,7 @@
 # Map Trix : Google Maps Interface
 
+[![npm](https://img.shields.io/npm/v/map-trix)](https://www.npmjs.com/package/map-trix)
+
 ## Description
 This module provides an easy to use interface that allows to load and use Google Maps API.
 

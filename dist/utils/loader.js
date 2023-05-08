@@ -10,16 +10,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 const defaultOptions = {
     language: 'fr',
     version: 'weekly',
+    libraries: [],
 };
 export function _loadGoogleMapsScript(API_KEY = null, options = defaultOptions, callback = null) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const googleLib = 'https://maps.googleapis.com/maps/api/js';
         API_KEY = API_KEY !== null && API_KEY !== void 0 ? API_KEY : localStorage.getItem('g_api_key');
-        let googleLibPath = `${googleLib}?key=${API_KEY}&v=3.exp&signed_in=true`;
+        let googleLibPath = 'https://maps.googleapis.com/maps/api/js';
+        // signed_in=true
         if (options.language)
-            googleLibPath += `&language=${options.language}`;
+            googleLibPath += `?language=${options.language}`;
+        if (API_KEY)
+            googleLibPath += `&key=${API_KEY}`;
         if (options.version)
-            googleLibPath += `&version=${options.version}`;
+            googleLibPath += `&v=${options.version}`;
+        if ((((_a = options === null || options === void 0 ? void 0 : options.libraries) === null || _a === void 0 ? void 0 : _a.length) || 0) > 0) {
+            googleLibPath += `&libraries=${options.libraries.join(',')}`;
+        }
         yield _loadScript(googleLibPath);
         if (typeof callback === 'function')
             callback();
