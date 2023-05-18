@@ -12,17 +12,18 @@ const defaultOptions = {
  * @param {Object} options
  * @returns {MapTrix} MapTrix instance
  */
-export async function createMapTrix(API_KEY:string = null, { language = 'en', version = 'weekly'} = {}) {
+export async function createMapTrix(API_KEY:string = null, { language = 'en', version = 'weekly'} = {}, callback = () => new MapTrix()) {
     if (typeof google == 'undefined') {
         const options = {
             language,
             version,
+            //callback: () => new MapTrix()
         }
-        await _loadGoogleMapsScript(API_KEY, options)
-        return new MapTrix()
+        await _loadGoogleMapsScript(API_KEY, options, callback)
+        //return new MapTrix()
     }
 
-    return new MapTrix()
+    return callback()
 }
 
 const defaultConfig = {
@@ -87,6 +88,10 @@ export class MapTrix {
 
         if ($mapElSelector) {
             this.mapEl = $mapElSelector
+
+            // TODO : use new way
+            // const { Map } = await google.maps.importLibrary("maps")
+            // this.map = new Map(this.mapEl, this.mapOptions)
 
             this.map = new google.maps.Map(this.mapEl, this.mapOptions)
     

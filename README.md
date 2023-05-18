@@ -18,7 +18,12 @@ Load the lib and create an instance
 import { createMapTrix } from 'map-trix'
 
 // Google Maps lib options
-const options = { language: 'en', version: 'weekly', /* TODO : to be completed */ }
+const options = { 
+    language: 'en', 
+    version: 'weekly', 
+    libraries: ["places"]
+    /* TODO : to be completed */ 
+}
 
 /**
  * Load the lib and create an instance

@@ -33,7 +33,8 @@ const defaultOptions$1 = {
 function _loadGoogleMapsScript(API_KEY = null, options = defaultOptions$1, callback = null) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        API_KEY = API_KEY !== null && API_KEY !== void 0 ? API_KEY : localStorage.getItem('g_api_key');
+        API_KEY = API_KEY || localStorage.getItem('g_api_key');
+        console.log('OPTIONS', options, '#', API_KEY, '#');
         let googleLibPath = 'https://maps.googleapis.com/maps/api/js';
         // signed_in=true
         if (options.language)
@@ -42,15 +43,17 @@ function _loadGoogleMapsScript(API_KEY = null, options = defaultOptions$1, callb
             googleLibPath += `&key=${API_KEY}`;
         if (options.version)
             googleLibPath += `&v=${options.version}`;
-        if ((((_a = options === null || options === void 0 ? void 0 : options.libraries) === null || _a === void 0 ? void 0 : _a.length) || 0) > 0) {
+        if ((((_a = options === null || options === void 0 ? void 0 : options.libraries) === null || _a === void 0 ? void 0 : _a.length) || 0) > 0)
             googleLibPath += `&libraries=${options.libraries.join(',')}`;
-        }
+        if (options.callback)
+            googleLibPath += `&callback=${options.callback}`;
         yield _loadScript(googleLibPath);
-        if (typeof callback === 'function')
-            callback();
+        if (typeof options.callback === 'function')
+            options.callback();
     });
 }
 function _loadScript(src) {
+    console.log('src', src);
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.type = 'text/javascript';
@@ -78,17 +81,18 @@ const defaultOptions = {
  * @param {Object} options
  * @returns {MapTrix} MapTrix instance
  */
-function createMapTrix(API_KEY = null, { language = 'en', version = 'weekly' } = {}) {
+function createMapTrix(API_KEY = null, { language = 'en', version = 'weekly' } = {}, callback = () => new MapTrix()) {
     return __awaiter(this, void 0, void 0, function* () {
         if (typeof google == 'undefined') {
             const options = {
                 language,
                 version,
+                //callback: () => new MapTrix()
             };
-            yield _loadGoogleMapsScript(API_KEY, options);
-            return new MapTrix();
+            yield _loadGoogleMapsScript(API_KEY, options, callback);
+            //return new MapTrix()
         }
-        return new MapTrix();
+        return callback();
     });
 }
 const defaultConfig = {
@@ -129,6 +133,9 @@ class MapTrix {
         const $mapElSelector = document.querySelector(mapElSelector);
         if ($mapElSelector) {
             this.mapEl = $mapElSelector;
+            // TODO : use new way
+            // const { Map } = await google.maps.importLibrary("maps")
+            // this.map = new Map(this.mapEl, this.mapOptions)
             this.map = new google.maps.Map(this.mapEl, this.mapOptions);
             if (this.config.enableBounds) {
                 this.bounds = google.maps ? new google.maps.LatLngBounds() : null;
