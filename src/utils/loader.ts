@@ -19,7 +19,7 @@ export async function _loadGoogleMapsScript(API_KEY: string = null, options = de
     
     if(options.version) googleLibPath += `&v=${options.version}`
 
-    if (options.libraries.length > 0) {
+    if ((options?.libraries?.length || 0) > 0) {
         googleLibPath += `&libraries=${options.libraries.join(',')}`
     }
      
