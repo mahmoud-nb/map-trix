@@ -1,10 +1,26 @@
 import { _loadGoogleMapsScript } from './utils/loader'
 import { customMarkerOptions } from './types/globals'
+import Utils from './utils/utils'
 
+export { Utils }
+  
 const defaultOptions = {
     language: 'fr',
     version: 'weekly',
 }
+
+declare global {
+    interface Window {
+        createMaptrixInstance: () => MapTrix;
+    }
+}
+
+const createMaptrixInstance = function():MapTrix { 
+    console.info('MapTrix instance created, after Google Maps loading...') 
+    return new MapTrix() 
+}
+
+window.createMaptrixInstance = createMaptrixInstance
 
 /**
  *
@@ -13,16 +29,16 @@ const defaultOptions = {
  * @returns {MapTrix} MapTrix instance
  */
 export async function createMapTrix(API_KEY:string = null, { language = 'en', version = 'weekly'} = {}) {
-    if (typeof google == 'undefined') {
-        const options = {
-            language,
-            version,
-        }
-        await _loadGoogleMapsScript(API_KEY, options)
-        return new MapTrix()
+
+    if (typeof google === 'object') return createMaptrixInstance()
+
+    const options = {
+        language,
+        version,
+        callback: 'createMaptrixInstance',
     }
 
-    return new MapTrix()
+    await _loadGoogleMapsScript(API_KEY, options)
 }
 
 const defaultConfig = {
@@ -87,6 +103,10 @@ export class MapTrix {
 
         if ($mapElSelector) {
             this.mapEl = $mapElSelector
+
+            // TODO : use new way
+            // const { Map } = await google.maps.importLibrary("maps")
+            // this.map = new Map(this.mapEl, this.mapOptions)
 
             this.map = new google.maps.Map(this.mapEl, this.mapOptions)
     
@@ -259,22 +279,4 @@ export class MapTrix {
             }
         })
     }
-
-    // GeoLocalisation #############################################################
-    /**
-	 * Load current position
-	 */
-    getCurrentPosition({enableHighAccuracy = true, timeout = 5000, maximumAge = 0} = {}) {
-
-        const options = {
-            enableHighAccuracy,
-            timeout,
-            maximumAge,
-        }
-
-        return new Promise((resolve, reject) =>
-            navigator.geolocation.getCurrentPosition(resolve, reject, options)
-        )
-    }
-
 }

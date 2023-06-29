@@ -4,25 +4,21 @@ const defaultOptions:any = {
     libraries: [],
 }
 
+export async function _loadGoogleMapsScript(API_KEY: string = null, options = defaultOptions, callback?:any ) {
 
-export async function _loadGoogleMapsScript(API_KEY: string = null, options = defaultOptions, callback:any = null ) {
-    
-    API_KEY = API_KEY ?? localStorage.getItem('g_api_key')
+    API_KEY = API_KEY || localStorage.getItem('g_api_key')
 
     let googleLibPath = 'https://maps.googleapis.com/maps/api/js'
-    
-    // signed_in=true
 
-    if(options.language) googleLibPath += `?language=${options.language}`
+    if(options.callback) googleLibPath += `?callback=${options.callback}`
 
     if(API_KEY) googleLibPath += `&key=${API_KEY}`
+
+    if(options.language) googleLibPath += `&language=${options.language}`
     
     if(options.version) googleLibPath += `&v=${options.version}`
 
-    if ((options?.libraries?.length || 0) > 0) {
-        googleLibPath += `&libraries=${options.libraries.join(',')}`
-    }
-     
+    if ((options?.libraries?.length || 0) > 0) googleLibPath += `&libraries=${options.libraries.join(',')}`
 
     await _loadScript(googleLibPath)
     if (typeof callback === 'function') callback()
