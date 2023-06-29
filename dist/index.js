@@ -30,30 +30,27 @@ const defaultOptions$1 = {
     version: 'weekly',
     libraries: [],
 };
-function _loadGoogleMapsScript(API_KEY = null, options = defaultOptions$1, callback = null) {
+function _loadGoogleMapsScript(API_KEY = null, options = defaultOptions$1, callback) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
         API_KEY = API_KEY || localStorage.getItem('g_api_key');
-        console.log('OPTIONS', options, '#', API_KEY, '#');
         let googleLibPath = 'https://maps.googleapis.com/maps/api/js';
-        // signed_in=true
-        if (options.language)
-            googleLibPath += `?language=${options.language}`;
+        if (options.callback)
+            googleLibPath += `?callback=${options.callback}`;
         if (API_KEY)
             googleLibPath += `&key=${API_KEY}`;
+        if (options.language)
+            googleLibPath += `&language=${options.language}`;
         if (options.version)
             googleLibPath += `&v=${options.version}`;
         if ((((_a = options === null || options === void 0 ? void 0 : options.libraries) === null || _a === void 0 ? void 0 : _a.length) || 0) > 0)
             googleLibPath += `&libraries=${options.libraries.join(',')}`;
-        if (options.callback)
-            googleLibPath += `&callback=${options.callback}`;
         yield _loadScript(googleLibPath);
-        if (typeof options.callback === 'function')
-            options.callback();
+        if (typeof callback === 'function')
+            callback();
     });
 }
 function _loadScript(src) {
-    console.log('src', src);
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.type = 'text/javascript';
@@ -71,28 +68,43 @@ function _loadScript(src) {
     });
 }
 
+const getCurrentPosition = ({ enableHighAccuracy = true, timeout = 5000, maximumAge = 0 } = {}) => {
+    const options = {
+        enableHighAccuracy,
+        timeout,
+        maximumAge,
+    };
+    return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, options));
+};
+var utils = {
+    getCurrentPosition,
+};
+
 const defaultOptions = {
     language: 'fr',
     version: 'weekly',
 };
+const createMaptrixInstance = function () {
+    console.info('MapTrix instance created, after Google Maps loading...');
+    return new MapTrix();
+};
+window.createMaptrixInstance = createMaptrixInstance;
 /**
  *
  * @param {String} API_KEY
  * @param {Object} options
  * @returns {MapTrix} MapTrix instance
  */
-function createMapTrix(API_KEY = null, { language = 'en', version = 'weekly' } = {}, callback = () => new MapTrix()) {
+function createMapTrix(API_KEY = null, { language = 'en', version = 'weekly' } = {}) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (typeof google == 'undefined') {
-            const options = {
-                language,
-                version,
-                //callback: () => new MapTrix()
-            };
-            yield _loadGoogleMapsScript(API_KEY, options, callback);
-            //return new MapTrix()
-        }
-        return callback();
+        if (typeof google === 'object')
+            return createMaptrixInstance();
+        const options = {
+            language,
+            version,
+            callback: 'createMaptrixInstance',
+        };
+        yield _loadGoogleMapsScript(API_KEY, options);
     });
 }
 const defaultConfig = {
@@ -278,18 +290,6 @@ class MapTrix {
             }
         });
     }
-    // GeoLocalisation #############################################################
-    /**
-     * Load current position
-     */
-    getCurrentPosition({ enableHighAccuracy = true, timeout = 5000, maximumAge = 0 } = {}) {
-        const options = {
-            enableHighAccuracy,
-            timeout,
-            maximumAge,
-        };
-        return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, options));
-    }
 }
 
-export { MapTrix, createMapTrix };
+export { MapTrix, utils as Utils, createMapTrix };

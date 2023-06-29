@@ -69,13 +69,21 @@ mapTrix.traceDirection(point1, point2).then( successResponse => /* Your code her
 
 Load current location
 ```javascript 
+import Utils from './utils/utils'
+
+
 /**
  * Load current user position
  * @param {enableHighAccuracy = true, timeout = 5000, maximumAge = 0}
  */
-mapTrix.getCurrentPosition().then( res => {
+Utils.getCurrentPosition().then( response => {
     // Your code here...
     // for example
-    mapTrix.addMarker({latitude: res.coords.latitude, longitude: res.coords.longitude, content: 'My position'}, true)
+    mapTrix.addMarker({
+        latitude: response.coords.latitude, 
+        longitude: response.coords.longitude, 
+        content: 'My position'}, 
+        true
+    )
 })
 ```
