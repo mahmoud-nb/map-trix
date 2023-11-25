@@ -1,30 +1,30 @@
-
-
-const defaultOptions:any = {
-  language: 'fr',
-  version: 'weekly',
-  libraries: [],
+export interface googleMapsOptions {
+  key?: string
+  language?: string
+  version?: string
+  libraries?: string[]
+  callback?: string
 }
 
-export async function _loadGoogleMapsScript(API_KEY: string|null = null, options = defaultOptions, callback?:any ) {
+export async function _loadGoogleMapsScript(API_KEY: string|null = null, options: googleMapsOptions, callback?:() => any ) {
 
+  API_KEY = API_KEY || options.key || localStorage.getItem('g_api_key')
 
+  const googleMapsLibUrl = new URL('https://maps.googleapis.com/maps/api/js')
 
-  API_KEY = API_KEY || localStorage.getItem('g_api_key')
+  const googleMapsParams: Record<string, string> = {
+    key: API_KEY,
+    language: options.language,
+    version: options.version,
+    ...((options?.libraries?.length || 0) > 0 && {libraries: options.libraries.join(',')}),
+    ...(options.callback && {callback: options.callback})
+  }
 
-  let googleLibPath = 'https://maps.googleapis.com/maps/api/js'
+  const googleMapsUrlParams = Object.keys(googleMapsParams).map(key => `${key}=${googleMapsParams[key]}`).join('&')
 
-  if(options.callback) googleLibPath += `?callback=${options.callback}`
+  const googleMapsLibPath = googleMapsUrlParams ? `${googleMapsLibUrl.href}?${googleMapsUrlParams}` : googleMapsLibUrl.href
 
-  if(API_KEY) googleLibPath += `&key=${API_KEY}`
-
-  if(options.language) googleLibPath += `&language=${options.language}`
-  
-  if(options.version) googleLibPath += `&v=${options.version}`
-
-  if ((options?.libraries?.length || 0) > 0) googleLibPath += `&libraries=${options.libraries.join(',')}`
-
-  await _loadScript(googleLibPath)
+  await _loadScript(googleMapsLibPath)
   if (typeof callback === 'function') callback()
 }
 

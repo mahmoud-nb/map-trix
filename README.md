@@ -19,6 +19,7 @@ import { createMapTrix } from 'map-trix'
 
 // Google Maps lib options
 const options = { 
+    key: 'Your Google API Key',
     language: 'en', 
     version: 'weekly', 
     libraries: ["places"]
@@ -27,7 +28,7 @@ const options = {
 
 /**
  * Load the lib and create an instance
- * @param {string} API_KEY : Your Google API Key
+ * @param {string} API_KEY : Your Google API Key @deprecated since version 1.4.4 please use options.key
  * @param {object} options : { center: { lat: 0, lng: 0 }, zoom: 5 ... }
  * @param {object} config : { enableBounds: false }
  * @returns : MapTrix instance

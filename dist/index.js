@@ -4,25 +4,19 @@
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global["map-trix"] = {}));
 })(this, (function (exports) { 'use strict';
 
-    const defaultOptions$1 = {
-        language: 'fr',
-        version: 'weekly',
-        libraries: [],
-    };
-    async function _loadGoogleMapsScript(API_KEY = null, options = defaultOptions$1, callback) {
-        API_KEY = API_KEY || localStorage.getItem('g_api_key');
-        let googleLibPath = 'https://maps.googleapis.com/maps/api/js';
-        if (options.callback)
-            googleLibPath += `?callback=${options.callback}`;
-        if (API_KEY)
-            googleLibPath += `&key=${API_KEY}`;
-        if (options.language)
-            googleLibPath += `&language=${options.language}`;
-        if (options.version)
-            googleLibPath += `&v=${options.version}`;
-        if ((options?.libraries?.length || 0) > 0)
-            googleLibPath += `&libraries=${options.libraries.join(',')}`;
-        await _loadScript(googleLibPath);
+    async function _loadGoogleMapsScript(API_KEY = null, options, callback) {
+        API_KEY = API_KEY || options.key || localStorage.getItem('g_api_key');
+        const googleMapsLibUrl = new URL('https://maps.googleapis.com/maps/api/js');
+        const googleMapsParams = {
+            key: API_KEY,
+            language: options.language,
+            version: options.version,
+            ...((options?.libraries?.length || 0) > 0 && { libraries: options.libraries.join(',') }),
+            ...(options.callback && { callback: options.callback })
+        };
+        const googleMapsUrlParams = Object.keys(googleMapsParams).map(key => `${key}=${googleMapsParams[key]}`).join('&');
+        const googleMapsLibPath = googleMapsUrlParams ? `${googleMapsLibUrl.href}?${googleMapsUrlParams}` : googleMapsLibUrl.href;
+        await _loadScript(googleMapsLibPath);
         if (typeof callback === 'function')
             callback();
     }
@@ -64,22 +58,23 @@
         console.info('## MapTrix instance created, after Google Maps loading...');
         return new MapTrix();
     };
+    const googleMapsDefaultOptions = {
+        language: 'en',
+        version: 'weekly',
+        //callback: 'createMaptrixInstance',
+    };
     /**
      *
      * @param {String} API_KEY
      * @param {Object} options
      * @returns {MapTrix} MapTrix instance
      */
-    async function createMapTrix(API_KEY = null, { language = 'en', version = 'weekly' } = {}) {
+    async function createMapTrix(API_KEY = null, options = googleMapsDefaultOptions) {
         window.createMaptrixInstance = createMaptrixInstance;
-        //if (typeof google?.maps === 'object') return createMaptrixInstance()
-        const options = {
-            language,
-            version,
-            callback: 'createMaptrixInstance',
-        };
+        if (typeof google === 'object' && !!google?.maps)
+            return createMaptrixInstance();
         await _loadGoogleMapsScript(API_KEY, options);
-        //createMaptrixInstance()
+        return createMaptrixInstance();
     }
     const defaultConfig = {
         enableBounds: false,

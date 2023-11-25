@@ -1,4 +1,4 @@
-import { _loadGoogleMapsScript } from './utils/loader'
+import { _loadGoogleMapsScript, googleMapsOptions } from './utils/loader'
 import { customMarkerOptions } from './types/globals'
 import Utils from './utils/utils'
 
@@ -20,26 +20,26 @@ const createMaptrixInstance = function (): MapTrix {
   return new MapTrix()
 }
 
+const googleMapsDefaultOptions = {
+  language: 'en', 
+  version: 'weekly',
+  //callback: 'createMaptrixInstance',
+}
+
 /**
  *
  * @param {String} API_KEY
  * @param {Object} options
  * @returns {MapTrix} MapTrix instance
  */
-export async function createMapTrix(API_KEY: string | null = null, { language = 'en', version = 'weekly' } = {}) {
+export async function createMapTrix(API_KEY: string | null = null, options:googleMapsOptions = googleMapsDefaultOptions) {
 
   window.createMaptrixInstance = createMaptrixInstance
 
-  //if (typeof google?.maps === 'object') return createMaptrixInstance()
-
-  const options = {
-    language,
-    version,
-    callback: 'createMaptrixInstance',
-  }
+  if (typeof google === 'object' && !!google?.maps) return createMaptrixInstance()
 
   await _loadGoogleMapsScript(API_KEY, options)
-  //createMaptrixInstance()
+  return createMaptrixInstance()
 }
 
 const defaultConfig = {
