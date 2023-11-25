@@ -30,7 +30,7 @@ export async function createMapTrix(API_KEY: string | null = null, { language = 
 
   window.createMaptrixInstance = createMaptrixInstance
 
-  if (typeof google === 'object') return createMaptrixInstance()
+  //if (typeof google?.maps === 'object') return createMaptrixInstance()
 
   const options = {
     language,
@@ -39,6 +39,7 @@ export async function createMapTrix(API_KEY: string | null = null, { language = 
   }
 
   await _loadGoogleMapsScript(API_KEY, options)
+  //createMaptrixInstance()
 }
 
 const defaultConfig = {
