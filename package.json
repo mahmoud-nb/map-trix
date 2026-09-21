@@ -1,6 +1,6 @@
 {
   "name": "map-trix",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "One easy-to-use interface to load and use any map client (Google Maps, Leaflet, MapLibre, Mapbox): markers, popups, store locator, routing and clustering.",
   "type": "module",
   "files": [
