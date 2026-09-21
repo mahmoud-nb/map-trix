@@ -9,17 +9,26 @@ jobs:
     release:
         name: 🚀 release
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
         steps:
             - name: 📚 checkout
-              uses: actions/checkout@v2.1.1
+              uses: actions/checkout@v4
             - name: 🟢 node
-              uses: actions/setup-node@v1.4.2
+              uses: actions/setup-node@v4
               with:
-                  node-version: 12
+                  node-version: 20
                   registry-url: https://registry.npmjs.org
-              env:
-                  ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+                  cache: npm
+            - name: 📦 install
+              run: npm ci
+            - name: 🔎 lint
+              run: npm run lint
+            - name: 🧪 type check
+              run: npm run tsc
+            - name: 🏗️ build
+              run: npm run build
             - name: 🚀 publish
               run: npm publish --access public
               env:
-                  NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

@@ -45,7 +45,7 @@ const point1 = {
     latitude: 48.85840, 
     longitude: 2.29448
 }
-mapTrix.addMarker(point)
+mapTrix.addMarker(point1)
 
 // Add marker with infoWindow
 const point2 = {
@@ -70,7 +70,7 @@ mapTrix.traceDirection(point1, point2).then( successResponse => /* Your code her
 
 Load current location
 ```javascript 
-import Utils from './utils/utils'
+import { Utils } from 'map-trix'
 
 
 /**

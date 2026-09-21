@@ -6,44 +6,64 @@ export interface googleMapsOptions {
   callback?: string
 }
 
-export async function _loadGoogleMapsScript(API_KEY: string|null = null, options: googleMapsOptions, callback?:() => any ) {
+const GOOGLE_MAPS_BASE_URL = 'https://maps.googleapis.com/maps/api/js'
 
-  API_KEY = API_KEY || options.key || localStorage.getItem('g_api_key')
-
-  const googleMapsLibUrl = new URL('https://maps.googleapis.com/maps/api/js')
-
-  const googleMapsParams: Record<string, string> = {
-    key: API_KEY,
-    language: options.language,
-    version: options.version,
-    ...((options?.libraries?.length || 0) > 0 && {libraries: options.libraries.join(',')}),
-    ...(options.callback && {callback: options.callback})
+function resolveApiKey(apiKey: string | null, options: googleMapsOptions): string | null {
+  if (apiKey) return apiKey
+  if (options.key) return options.key
+  if (typeof localStorage !== 'undefined') {
+    return localStorage.getItem('g_api_key')
   }
-
-  const googleMapsUrlParams = Object.keys(googleMapsParams).map(key => `${key}=${googleMapsParams[key]}`).join('&')
-
-  const googleMapsLibPath = googleMapsUrlParams ? `${googleMapsLibUrl.href}?${googleMapsUrlParams}` : googleMapsLibUrl.href
-
-  await _loadScript(googleMapsLibPath)
-  if (typeof callback === 'function') callback()
+  return null
 }
 
-export function _loadScript(src: string) {
+export async function _loadGoogleMapsScript(
+  apiKey: string | null = null,
+  options: googleMapsOptions = {},
+  callback?: () => void,
+): Promise<void> {
+  const key = resolveApiKey(apiKey, options)
+
+  if (!key) {
+    console.warn('[map-trix] No Google Maps API key provided. The map may fail to load.')
+  }
+
+  const params = new URLSearchParams()
+  if (key) params.set('key', key)
+  if (options.language) params.set('language', options.language)
+  if (options.version) params.set('version', options.version)
+  if (options.libraries?.length) params.set('libraries', options.libraries.join(','))
+  if (options.callback) params.set('callback', options.callback)
+
+  const query = params.toString()
+  const src = query ? `${GOOGLE_MAPS_BASE_URL}?${query}` : GOOGLE_MAPS_BASE_URL
+
+  await _loadScript(src)
+
+  callback?.()
+}
+
+export function _loadScript(src: string): Promise<HTMLScriptElement> {
   return new Promise((resolve, reject) => {
+    // Avoid injecting the same script twice.
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${src}"]`)
+    if (existing) {
+      resolve(existing)
+      return
+    }
+
     const script = document.createElement('script')
     script.type = 'text/javascript'
     script.src = src
     script.defer = true
+    script.async = true
+
+    // Resolve the promise once the script is loaded.
+    script.addEventListener('load', () => resolve(script))
+
+    // Reject if the script fails to load.
+    script.addEventListener('error', () => reject(new Error(`${src} failed to load.`)))
+
     document.head.appendChild(script)
-
-    // Resolve the promise once the script is loaded
-    script.addEventListener('load', () => {
-      resolve(script)
-    })
-
-    // Catch any errors while loading the script
-    script.addEventListener('error', () => {
-      reject(new Error(`${src} failed to load.`))
-    })
   })
 }

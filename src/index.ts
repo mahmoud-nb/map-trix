@@ -1,88 +1,88 @@
-import { _loadGoogleMapsScript, googleMapsOptions } from './utils/loader'
-import { customMarkerOptions } from './types/globals'
+import { _loadGoogleMapsScript } from './utils/loader'
+import type { googleMapsOptions } from './utils/loader'
+import type { Position, customMarkerOptions, MapTrixConfig } from './types/globals'
 import Utils from './utils/utils'
 
 export { Utils }
+export type { googleMapsOptions, Position, customMarkerOptions, MapTrixConfig }
 
-const defaultOptions = {
-  language: 'fr',
+const googleMapsDefaultOptions: googleMapsOptions = {
+  language: 'en',
   version: 'weekly',
 }
 
-declare global {
-  interface Window {
-    createMaptrixInstance: () => MapTrix;
-  }
-}
-
-const createMaptrixInstance = function (): MapTrix {
-  console.info('## MapTrix instance created, after Google Maps loading...')
-  return new MapTrix()
-}
-
-const googleMapsDefaultOptions = {
-  language: 'en', 
-  version: 'weekly',
-  //callback: 'createMaptrixInstance',
-}
-
-/**
- *
- * @param {String} API_KEY
- * @param {Object} options
- * @returns {MapTrix} MapTrix instance
- */
-export async function createMapTrix(API_KEY: string | null = null, options:googleMapsOptions = googleMapsDefaultOptions) {
-
-  window.createMaptrixInstance = createMaptrixInstance
-
-  if (typeof google === 'object' && !!google?.maps) return createMaptrixInstance()
-
-  await _loadGoogleMapsScript(API_KEY, options)
-  return createMaptrixInstance()
-}
-
-const defaultConfig = {
+const defaultConfig: MapTrixConfig = {
   enableBounds: false,
 }
 
-const defaultMapOptions = {
+const defaultMapOptions: google.maps.MapOptions = {
   center: { lat: 48.92340114684859, lng: 2.259291646326453 },
   zoom: 9,
   minZoom: 2,
   disableDefaultUI: false,
-  //zoomControl: true,
-  //zoomControlOptions: {style: google.maps.ZoomControlStyle.SMALL},
 }
 
-const defaultMarkerOptions = {}
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function isPosition(value: unknown): value is Position {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    isFiniteNumber((value as Position).latitude) &&
+    isFiniteNumber((value as Position).longitude)
+  )
+}
+
+/**
+ * Load the Google Maps script (if needed) and create a MapTrix instance.
+ * @param apiKey Your Google Maps API key. @deprecated since 1.4.4, use `options.key` instead.
+ * @param options Google Maps loader options.
+ * @returns A ready-to-use MapTrix instance.
+ */
+export async function createMapTrix(
+  apiKey: string | null = null,
+  options: googleMapsOptions = googleMapsDefaultOptions,
+): Promise<MapTrix> {
+  if (typeof google === 'object' && google?.maps) return new MapTrix()
+
+  await _loadGoogleMapsScript(apiKey, options)
+  return new MapTrix()
+}
 
 export class MapTrix {
 
-  config: any = {}
+  config: MapTrixConfig = { ...defaultConfig }
 
-  mapEl: HTMLElement = null
+  mapEl: HTMLElement | null = null
 
-  map: google.maps.Map = null
+  map: google.maps.Map | null = null
   mapOptions: google.maps.MapOptions = {}
 
-  markers: Array<google.maps.Marker> = []
-  markerOptions: google.maps.MarkerOptions = {}
+  markers: google.maps.Marker[] = []
 
-  currentInfoWindow: google.maps.InfoWindow = null
+  currentInfoWindow: google.maps.InfoWindow | null = null
 
-  bounds: google.maps.LatLngBounds = null
+  bounds: google.maps.LatLngBounds | null = null
 
-  directionsService: google.maps.DirectionsService = null
-  directionsRenderer: google.maps.DirectionsRenderer = null
+  directionsService: google.maps.DirectionsService | null = null
+  directionsRenderer: google.maps.DirectionsRenderer | null = null
 
-  constructor(API_KEY: string = null) {
-
-    if (typeof google == 'undefined')
-      _loadGoogleMapsScript(API_KEY, defaultOptions)
-  }
-
-  init(mapElSelector = '#mapContainer', customMapOptions: any = {}, config: any = {}) {
+  /**
+   * Initialize the map inside the given container.
+   * @param mapElSelector CSS selector of the map container element.
+   * @param customMapOptions Google Maps options merged over the defaults.
+   * @param config MapTrix specific configuration.
+   */
+  init(
+    mapElSelector = '#mapContainer',
+    customMapOptions: google.maps.MapOptions = {},
+    config: Partial<MapTrixConfig> = {},
+  ): void {
+    if (typeof google === 'undefined' || !google.maps) {
+      throw new Error('Google Maps is not loaded. Use createMapTrix() to load the API first.')
+    }
 
     if (this.map !== null) throw new Error('a map is already loaded for this instance!')
 
@@ -91,193 +91,220 @@ export class MapTrix {
       ...config,
     }
 
-    const latitude = customMapOptions?.center?.lat || defaultMapOptions.center.lat
-    const longitude = customMapOptions?.center?.lng || defaultMapOptions.center.lng
-
     this.mapOptions = {
       ...defaultMapOptions,
-      center: this.point(latitude, longitude),
       ...customMapOptions,
+      center: customMapOptions.center ?? defaultMapOptions.center,
     }
 
-    const $mapElSelector = <HTMLElement>document.querySelector(mapElSelector)
+    const mapEl = document.querySelector<HTMLElement>(mapElSelector)
 
-    if ($mapElSelector) {
-      this.mapEl = $mapElSelector
+    if (!mapEl) throw new Error('Map container element not found')
 
-      // TODO : use new way
-      // const { Map } = await google.maps.importLibrary("maps")
-      // this.map = new Map(this.mapEl, this.mapOptions)
+    this.mapEl = mapEl
+    this.map = new google.maps.Map(this.mapEl, this.mapOptions)
 
-      this.map = new google.maps.Map(this.mapEl, this.mapOptions)
-
-      if (this.config.enableBounds) {
-        this.bounds = google.maps ? new google.maps.LatLngBounds() : null
-      }
-    } else {
-      throw new Error('Map container element not found')
+    if (this.config.enableBounds) {
+      this.bounds = new google.maps.LatLngBounds()
     }
+  }
+
+  private ensureMap(): google.maps.Map {
+    if (!this.map) {
+      throw new Error('Map is not initialized. Call init() first.')
+    }
+    return this.map
   }
 
   /**
-   * Set map options
-   * @param {google.maps.MapOptions} options
+   * Set map options.
+   * @param options Google Maps options. `latitude`/`longitude` are converted to `center`.
    */
-  setMapOptions(options: any) {
-    try {
+  setMapOptions(options: google.maps.MapOptions & { latitude?: number; longitude?: number }): void {
+    const map = this.ensureMap()
+    const { latitude, longitude, ...mapOptions } = options
 
-      if (options.latitude && options.langitude) {
-        options.center = this.point(options.latitude, options.langitude)
-      }
-
-      this.map.setOptions(options)
-    } catch (e) {
-      console.log('Exception', e)
+    if (isFiniteNumber(latitude) && isFiniteNumber(longitude)) {
+      mapOptions.center = this.point(latitude, longitude)
     }
+
+    map.setOptions(mapOptions)
   }
 
-  point(latitude: number, longitude: number) {
+  point(latitude: number, longitude: number): google.maps.LatLng {
     return new google.maps.LatLng(latitude, longitude)
   }
 
   // MARKERS ##############################################
   /**
-   * Add marker
-   * @param {Object} options : object{ title, content, latitude, longitude, draggable, icon ... }
-   * @param {Boolean} enableInfoWindow
+   * Add a marker to the map.
+   * @param options Marker options including `latitude`, `longitude` and an optional `content`.
+   * @param enableInfoWindow Whether to open an InfoWindow (using `content`) on click.
+   * @returns The created marker, or `undefined` when coordinates are invalid.
    */
-  addMarker(options: customMarkerOptions, enableInfoWindow = false) {
-    if (options?.latitude && typeof options?.longitude) {
-      this.markerOptions = {
-        ...defaultMarkerOptions,
-        ...options,
-        map: this.map,
-        position: new google.maps.LatLng(options.latitude, options.longitude),
-      }
+  addMarker(options: customMarkerOptions, enableInfoWindow = false): google.maps.Marker | undefined {
+    if (!isFiniteNumber(options?.latitude) || !isFiniteNumber(options?.longitude)) {
+      return undefined
+    }
 
-      const marker = new google.maps.Marker(this.markerOptions)
+    const map = this.ensureMap()
 
-      this.markers.push(marker)
+    const markerOptions: google.maps.MarkerOptions = {
+      ...options,
+      map,
+      position: this.point(options.latitude, options.longitude),
+    }
 
-      if (enableInfoWindow) {
-        const infoWindow = this.createInfoWindow(options)
+    const marker = new google.maps.Marker(markerOptions)
 
-        if (infoWindow)
-          google.maps.event.addListener(marker, 'click', this.openInfoWindow(infoWindow, marker))
-      }
+    this.markers.push(marker)
 
-      if (this.config.enableBounds) {
-        this.bounds.extend(marker.getPosition())
-        this.map.fitBounds(this.bounds)
+    if (enableInfoWindow) {
+      const infoWindow = this.createInfoWindow(options)
+
+      if (infoWindow) {
+        marker.addListener('click', this.openInfoWindow(infoWindow, marker))
       }
     }
+
+    if (this.config.enableBounds) {
+      const bounds = this.bounds ?? new google.maps.LatLngBounds()
+      this.bounds = bounds
+
+      const position = marker.getPosition()
+      if (position) {
+        bounds.extend(position)
+        map.fitBounds(bounds)
+      }
+    }
+
+    return marker
   }
 
   /**
-   * Delete Marker
+   * Delete a marker: remove it from the map, drop its listeners and forget it.
    */
-  deleteMarker(marker: google.maps.Marker) {
+  deleteMarker(marker: google.maps.Marker): void {
     marker.setMap(null)
+    google.maps.event.clearInstanceListeners(marker)
+    this.markers = this.markers.filter(m => m !== marker)
   }
 
   /**
-   * Clear all Markers
+   * Clear all markers.
    */
-  clearMarkers() {
-    this.markers.forEach(marker => this.deleteMarker(marker))
+  clearMarkers(): void {
+    this.markers.forEach(marker => {
+      marker.setMap(null)
+      google.maps.event.clearInstanceListeners(marker)
+    })
     this.markers = []
   }
 
   // InfoWindow ############################################
 
   /**
-   * Create InfoWindow
-   * @param {Object} data
-   * @returns {InfoWindow}
+   * Create an InfoWindow from marker data.
+   * @returns The InfoWindow, or `null` when there is no content to display.
    */
-  createInfoWindow(data: any): google.maps.InfoWindow {
-    if (!data) return null
+  createInfoWindow(data: { content?: string } | null): google.maps.InfoWindow | null {
+    if (!data?.content) return null
 
     const infoWindow = new google.maps.InfoWindow({ content: data.content })
 
-    google.maps.event.addListener(infoWindow, 'closeclick', this.closeInfoWindow(infoWindow))
+    infoWindow.addListener('closeclick', this.closeInfoWindow(infoWindow))
 
     return infoWindow
   }
 
   /**
-   * Open InfoWindow
-   * @param {InfoWindow} infoWindow
-   * @param {Marker} marker
+   * Returns a click handler that opens the given InfoWindow on the given marker.
    */
-  openInfoWindow(infoWindow: google.maps.InfoWindow, marker: google.maps.Marker) {
+  openInfoWindow(infoWindow: google.maps.InfoWindow, marker: google.maps.Marker): () => void {
     return () => {
       // Close the last selected marker before opening this one.
       if (this.currentInfoWindow) {
         this.currentInfoWindow.close()
       }
 
-      infoWindow.open(this.map, marker)
+      if (this.map) {
+        infoWindow.open(this.map, marker)
+      }
       this.currentInfoWindow = infoWindow
     }
   }
 
   /**
-   * Close InfoWindow
-   * @param {InfoWindow} infoWindow
+   * Returns a handler that closes the given InfoWindow.
    */
-  closeInfoWindow(infoWindow: google.maps.InfoWindow) {
+  closeInfoWindow(infoWindow: google.maps.InfoWindow): () => void {
     return () => {
       infoWindow.close()
+      if (this.currentInfoWindow === infoWindow) {
+        this.currentInfoWindow = null
+      }
     }
   }
 
   // Bounds ######################################################
-  boundsMarkers() {
-    if (!this.bounds)
-      this.bounds = new google.maps.LatLngBounds()
+  boundsMarkers(): void {
+    const map = this.ensureMap()
 
-    if (this.markers.length > 0) {
-      this.markers.forEach(marker => this.bounds.extend(marker.getPosition()))
-      this.map.fitBounds(this.bounds)
-    }
+    const bounds = this.bounds ?? new google.maps.LatLngBounds()
+    this.bounds = bounds
+
+    if (this.markers.length === 0) return
+
+    this.markers.forEach(marker => {
+      const position = marker.getPosition()
+      if (position) bounds.extend(position)
+    })
+
+    map.fitBounds(bounds)
   }
 
   // Direction ####################################################
   /**
-   * string|google.maps.LatLng|google.maps.Place|google.maps.LatLngLiteral|Position
-   * @param {String} start
-   * @param {String} end
-   * @param {String} travelMode   // DRIVING | BICYCLING | TRANSIT | WALKING | TWO_WHEELER
+   * Trace a route between two points and render it on the map.
+   * @param start Origin, as a `{ latitude, longitude }` position or an address string.
+   * @param end Destination, as a `{ latitude, longitude }` position or an address string.
+   * @param travelMode DRIVING | BICYCLING | TRANSIT | WALKING | TWO_WHEELER
+   * @returns A promise resolving with the DirectionsResult, or rejecting on failure.
    */
-  traceDirection(start: any, end: any, travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING) {
+  traceDirection(
+    start: Position | string,
+    end: Position | string,
+    travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING,
+  ): Promise<google.maps.DirectionsResult> {
+    const map = this.ensureMap()
 
-    if (this.directionsService == null) {
+    if (this.directionsService === null || this.directionsRenderer === null) {
       this.directionsService = new google.maps.DirectionsService()
       this.directionsRenderer = new google.maps.DirectionsRenderer()
-      this.directionsRenderer.setMap(this.map)
+      this.directionsRenderer.setMap(map)
     }
 
+    const directionsService = this.directionsService
+    const directionsRenderer = this.directionsRenderer
+
+    const origin = isPosition(start) ? this.point(start.latitude, start.longitude) : start
+    const destination = isPosition(end) ? this.point(end.latitude, end.longitude) : end
+
     return new Promise((resolve, reject) => {
-
-      try {
-        const origin: string | google.maps.LatLng | google.maps.Place | google.maps.LatLngLiteral = start.latitude && start.longitude ? this.point(start.latitude, start.longitude) : start
-        const destination: string | google.maps.LatLng | google.maps.Place | google.maps.LatLngLiteral = end.longitude && end.longitude ? this.point(end.latitude, end.longitude) : end
-
-        const request: google.maps.DirectionsRequest = {
-          origin,
-          destination,
-          travelMode: google.maps.TravelMode[travelMode],
-        }
-        this.directionsService.route(request, (result, status) => {
-          if (status == 'OK') {
-            this.directionsRenderer.setDirections(result)
-            resolve(result)
-          }
-        })
-      } catch (e) {
-        reject(e)
+      const request: google.maps.DirectionsRequest = {
+        origin,
+        destination,
+        travelMode,
       }
+
+      directionsService.route(request, (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK && result) {
+          directionsRenderer.setDirections(result)
+          resolve(result)
+        } else {
+          reject(new Error(`Directions request failed: ${status}`))
+        }
+      })
     })
   }
 }

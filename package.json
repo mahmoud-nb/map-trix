@@ -40,23 +40,33 @@
     "url": "git@github.com:mahmoud-nb/map-trix.git"
   },
   "license": "ISC",
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
   "scripts": {
-    "lint": "eslint ./",
-    "lint:fix": "eslint --fix ./",
-    "tsc": "tsc",
-    "build": "tsc && rollup -c rollup.config.js"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "tsc": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json && rollup -c rollup.config.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@types/google.maps": "^3.66.3"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-json": "^6.0.1",
-    "@rollup/plugin-node-resolve": "^15.0.2",
-    "@rollup/plugin-typescript": "^11.1.1",
-    "@types/google.maps": "^3.52.6",
-    "@types/node": "^20.10.0",
-    "@typescript-eslint/eslint-plugin": "^5.59.2",
-    "@typescript-eslint/parser": "^5.59.2",
-    "eslint": "^8.39.0",
+    "@eslint/js": "^9.18.0",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.0",
+    "@types/node": "^22.10.0",
+    "eslint": "^9.18.0",
+    "globals": "^15.14.0",
+    "rollup": "^4.20.0",
     "rollup-plugin-polyfill-node": "^0.13.0",
-    "typescript": "^5.0.4"
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.20.0"
   }
 }
