@@ -1,0 +1,53 @@
+name: "📚 docs"
+
+on:
+    push:
+        branches:
+          - master
+    workflow_dispatch:
+
+# Allow the workflow to publish to GitHub Pages.
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+# Only one docs deployment at a time; don't cancel an in-progress run.
+concurrency:
+    group: pages
+    cancel-in-progress: false
+
+jobs:
+    build:
+        name: 🏗️ build docs
+        runs-on: ubuntu-latest
+        steps:
+            - name: 📚 checkout
+              uses: actions/checkout@v4
+            - name: 🟢 node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
+            - name: 📦 install
+              run: npm ci
+            - name: 🏗️ build docs site
+              run: npm run docs:build
+            - name: ⚙️ configure pages
+              uses: actions/configure-pages@v5
+            - name: ⬆️ upload artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: site
+
+    deploy:
+        name: 🚀 deploy docs
+        needs: build
+        runs-on: ubuntu-latest
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - name: 🚀 deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4

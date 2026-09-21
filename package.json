@@ -77,6 +77,8 @@
     "lint:fix": "eslint . --fix",
     "tsc": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json && rollup -c rollup.config.js",
+    "docs:build": "npm run build && node scripts/build-docs.mjs",
+    "docs:preview": "npm run docs:build && npx --yes http-server site -p 5199 -c-1",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

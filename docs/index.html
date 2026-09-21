@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Map-Trix — one API for every map</title>
+  <meta name="description" content="One easy-to-use interface to load and use Google Maps, Leaflet, MapLibre or Mapbox: markers, popups, store locator, routing and clustering." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 25 41'%3E%3Cpath d='M12.5 0C5.6 0 0 5.6 0 12.5 0 21 12.5 41 12.5 41S25 21 25 12.5C25 5.6 19.4 0 12.5 0z' fill='%232563eb'/%3E%3Ccircle cx='12.5' cy='12.5' r='5' fill='%23fff'/%3E%3C/svg%3E" />
+
+  <!-- Provider stylesheets (all included; only the active one is used) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@6/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mapbox-gl@3/dist/mapbox-gl.css" />
+  <link rel="stylesheet" href="./assets/style.css" />
+
+  <script type="importmap">
+  {
+    "imports": {
+      "map-trix": "./dist/index.esm.js",
+      "leaflet": "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/+esm",
+      "leaflet.markercluster": "https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/+esm",
+      "maplibre-gl": "https://cdn.jsdelivr.net/npm/maplibre-gl@6/+esm",
+      "mapbox-gl": "https://cdn.jsdelivr.net/npm/mapbox-gl@3/+esm"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <span class="brand"><span class="dot"></span> map-trix</span>
+      <nav>
+        <a href="#demo">Demo</a>
+        <a href="#quick-start">Quick start</a>
+        <a href="#markers" class="hide-sm">Markers</a>
+        <a href="#store-locator" class="hide-sm">Store locator</a>
+        <a href="#routing" class="hide-sm">Routing</a>
+        <a href="#clustering" class="hide-sm">Clustering</a>
+        <a href="#api">API</a>
+        <a href="https://github.com/mahmoud-nb/map-trix">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- HERO -->
+    <section class="hero" style="border-top:none">
+      <div class="badges">
+        <span class="pill">TypeScript</span>
+        <span class="pill">Google · Leaflet · MapLibre · Mapbox</span>
+        <span class="pill">Zero-config Leaflet & MapLibre</span>
+      </div>
+      <h1>One API for <span class="grad">every map</span></h1>
+      <p>Display and customize markers, popups, store locators, routes and clustering on top of the map client of your choice. Switch providers by changing one option — your code stays the same.</p>
+      <div class="cta">
+        <a class="btn primary" href="#quick-start">Get started</a>
+        <a class="btn" href="#demo">Try the live demo</a>
+        <a class="btn" href="https://www.npmjs.com/package/map-trix">npm</a>
+      </div>
+      <div class="code" style="max-width:520px;margin:24px auto 0;text-align:left">
+        <button class="copy" data-copy>Copy</button>
+        <pre><code>npm install map-trix
+npm install leaflet   # or maplibre-gl / mapbox-gl</code></pre>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <h2>Why map-trix</h2>
+      <p class="lead">A thin, typed abstraction (Facade + Adapter) over the map libraries you already know.</p>
+      <div class="cards">
+        <div class="card"><div class="ic">🧩</div><h4>Provider-agnostic</h4><p>The same API on Google, Leaflet, MapLibre and Mapbox. Migrate or A/B test without rewriting.</p></div>
+        <div class="card"><div class="ic">📍</div><h4>Batteries included</h4><p>Markers, popups, polylines, store locator, routing and clustering out of the box.</p></div>
+        <div class="card"><div class="ic">📦</div><h4>Lazy & light</h4><p>SDKs are optional peer dependencies, loaded on demand. You only ship what you use.</p></div>
+        <div class="card"><div class="ic">🔒</div><h4>Typed & escape-hatched</h4><p>Full TypeScript types, plus access to the native map object whenever you need it.</p></div>
+      </div>
+    </section>
+
+    <!-- LIVE DEMO -->
+    <section id="demo">
+      <h2>Live demo</h2>
+      <p class="lead">Pick a provider and try the features. Leaflet and MapLibre need no key; Google and Mapbox ask for your own key/token (used only in your browser).</p>
+      <div class="demo">
+        <div class="demo-controls">
+          <div class="seg" role="tablist" aria-label="Provider">
+            <button data-provider="leaflet" class="active">Leaflet</button>
+            <button data-provider="maplibre">MapLibre</button>
+            <button data-provider="google">Google</button>
+            <button data-provider="mapbox">Mapbox</button>
+          </div>
+          <div id="key-row" hidden>
+            <label id="key-label" for="key-input">API key</label>
+            <input id="key-input" type="text" autocomplete="off" spellcheck="false" placeholder="paste your key / token" />
+            <button id="key-apply" class="btn">Apply</button>
+          </div>
+        </div>
+        <div class="demo-actions">
+          <button id="act-nearest">📍 Nearest to center</button>
+          <button id="act-route">🧭 Trace route</button>
+          <button id="act-cluster">🟢 Toggle clustering</button>
+          <button id="act-reset">↺ Reset</button>
+        </div>
+        <div id="map-host"><div id="map" class="map"></div></div>
+        <div id="demo-status" class="demo-status"></div>
+      </div>
+    </section>
+
+    <!-- QUICK START -->
+    <section id="quick-start">
+      <h2>Quick start</h2>
+      <p class="lead">Create a map, add a marker, fit the view. Coordinates accept <code class="inline">{ lat, lng }</code>, <code class="inline">{ latitude, longitude }</code> or <code class="inline">[lng, lat]</code>.</p>
+      <div class="code">
+        <button class="copy" data-copy>Copy</button>
+        <pre><code>import { createMap } from 'map-trix'
+
+const map = await createMap({
+  provider: 'leaflet',            // 'google' | 'leaflet' | 'maplibre' | 'mapbox'
+  container: '#map',
+  center: { lat: 48.8566, lng: 2.3522 },
+  zoom: 12,
+  // apiKey: '…'       // Google
+  // accessToken: '…'  // Mapbox
+})
+
+const marker = map.addMarker({
+  position: { lat: 48.8584, lng: 2.2945 },
+  popup: 'Eiffel Tower',
+  data: { id: 1 },
+})
+
+map.fitBounds()                   // fit to all markers</code></pre>
+      </div>
+      <div class="note">Leaflet, MapLibre and Mapbox need their stylesheet. Import it in your app
+        (<code class="inline">import 'leaflet/dist/leaflet.css'</code>) or let the provider inject it:
+        <code class="inline">createMap({ provider: 'leaflet', css: true, … })</code>.</div>
+
+      <h3>Per-provider entry points</h3>
+      <p class="lead">Import a provider explicitly for full control over bundling.</p>
+      <div class="code">
+        <button class="copy" data-copy>Copy</button>
+        <pre><code>import { createMap } from 'map-trix'
+import MapLibreProvider from 'map-trix/maplibre'
+
+const map = await createMap({ provider: new MapLibreProvider(), container: '#map' })</code></pre>
+      </div>
+    </section>
+
+    <!-- MARKERS -->
+    <section id="markers">
+      <h2>Markers &amp; popups</h2>
+      <div class="code">
+        <button class="copy" data-copy>Copy</button>
+        <pre><code>const m = map.addMarker({
+  position: [2.2945, 48.8584],        // [lng, lat]
+  title: 'HQ',
+  icon: { url: '/pin.png', size: [32, 32], anchor: [16, 32] },
+  popup: { content: 'Hello', maxWidth: 240 },
+  openPopupOnClick: true,             // default when popup is set
+})
+
+m.on('click', (e) =&gt; console.log(e.position))
+m.openPopup()
+map.removeMarker(m)
+map.clearMarkers()</code></pre>
+      </div>
+    </section>
+
+    <!-- STORE LOCATOR -->
+    <section id="store-locator">
+      <h2>Store locator</h2>
+      <p class="lead">A provider-agnostic helper for “find the nearest store” experiences — built on markers and haversine distance.</p>
+      <div class="code">
+        <button class="copy" data-copy>Copy</button>
+        <pre><code>import { StoreLocator } from 'map-trix'
+
+const locator = new StoreLocator(map, {
+  locations: stores,                  // [{ position, popup, data }, …]
+  onSelect: ({ location }) =&gt; console.log('picked', location.data),
+})
+
+const nearest = locator.findNearest({ lat: 48.86, lng: 2.35 }, 3)
+locator.filter((s) =&gt; s.data.open)    // show a subset
+const me = await locator.locateUser() // browser geolocation</code></pre>
+      </div>
+    </section>
+
+    <!-- ROUTING -->
+    <section id="routing">
+      <h2>Routing</h2>
+      <p class="lead">Native directions on Google, OSRM elsewhere. Draws the route and returns a normalized result.</p>
+      <div class="code">
+        <button class="copy" data-copy>Copy</button>
+        <pre><code>const route = await map.traceDirection(
+  { lat: 48.8584, lng: 2.2945 },
+  { lat: 48.8530, lng: 2.3499 },
+  'driving',                          // 'driving' | 'walking' | 'cycling' | 'transit'
+)
+console.log(route.distance, route.duration, route.geometry)
+
+// Point routing at your own OSRM server:
+map.setRoutingOptions({ osrmEndpoint: 'https://my-osrm.example.com' })</code></pre>
+      </div>
+    </section>
+
+    <!-- CLUSTERING -->
+    <section id="clustering">
+      <h2>Clustering</h2>
+      <p class="lead">One call, per-provider implementation (MarkerClusterer, leaflet.markercluster, or native GL clustering).</p>
+      <div class="code">
+        <button class="copy" data-copy>Copy</button>
+        <pre><code>await map.enableClustering({ radius: 60 })
+map.disableClustering()</code></pre>
+      </div>
+    </section>
+
+    <!-- PROVIDERS -->
+    <section id="providers">
+      <h2>Providers at a glance</h2>
+      <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>Feature</th><th class="c">Google</th><th class="c">Leaflet</th><th class="c">MapLibre</th><th class="c">Mapbox</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Markers &amp; popups</td><td class="c">✅</td><td class="c">✅</td><td class="c">✅</td><td class="c">✅</td></tr>
+          <tr><td>Polylines</td><td class="c">✅</td><td class="c">✅</td><td class="c">✅</td><td class="c">✅</td></tr>
+          <tr><td>Store locator</td><td class="c">✅</td><td class="c">✅</td><td class="c">✅</td><td class="c">✅</td></tr>
+          <tr><td>Routing</td><td class="c">native</td><td class="c">OSRM</td><td class="c">OSRM</td><td class="c">OSRM</td></tr>
+          <tr><td>Clustering</td><td class="c">✅</td><td class="c">✅</td><td class="c">✅</td><td class="c">✅</td></tr>
+          <tr><td>Requires key</td><td class="c">API key</td><td class="c">–</td><td class="c">–</td><td class="c">token</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <!-- API -->
+    <section id="api">
+      <h2>API reference</h2>
+      <div class="grid2">
+        <div>
+          <h3>createMap(options)</h3>
+          <p class="lead"><code class="inline">provider</code>, <code class="inline">container</code>, <code class="inline">center</code>, <code class="inline">zoom</code>, <code class="inline">minZoom</code>, <code class="inline">maxZoom</code>, <code class="inline">style</code>, <code class="inline">apiKey</code>, <code class="inline">accessToken</code>, <code class="inline">osrmEndpoint</code>, <code class="inline">providerOptions</code>.</p>
+          <h3>MapTrix</h3>
+          <p class="lead"><code class="inline">addMarker</code>, <code class="inline">removeMarker</code>, <code class="inline">clearMarkers</code>, <code class="inline">getMarkers</code>, <code class="inline">fitBounds</code>, <code class="inline">setCenter</code>, <code class="inline">getCenter</code>, <code class="inline">setZoom</code>, <code class="inline">getZoom</code>, <code class="inline">addPolyline</code>, <code class="inline">on</code>, <code class="inline">traceDirection</code>, <code class="inline">enableClustering</code>, <code class="inline">getProvider</code>, <code class="inline">getNativeMap</code>, <code class="inline">destroy</code>.</p>
+        </div>
+        <div>
+          <h3>Escape hatch</h3>
+          <div class="code">
+            <button class="copy" data-copy>Copy</button>
+            <pre><code>map.getNativeMap()   // native Map instance
+marker.getNative()   // native marker
+map.getProvider().capabilities</code></pre>
+          </div>
+          <h3>Legacy (Google, pre-2.0)</h3>
+          <div class="code">
+            <button class="copy" data-copy>Copy</button>
+            <pre><code>import { createMapTrix } from 'map-trix'
+const mt = await createMapTrix(API_KEY, { language: 'fr' })
+mt.init('#map')
+mt.addMarker({ latitude: 48.8584, longitude: 2.2945, content: 'Hi' }, true)</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      Map-Trix · ISC License · <a href="https://github.com/mahmoud-nb/map-trix">GitHub</a> · <a href="https://www.npmjs.com/package/map-trix">npm</a>
+    </div>
+  </footer>
+
+  <script type="module" src="./assets/demo.js"></script>
+</body>
+</html>
