@@ -160,3 +160,22 @@ Utils.getCurrentPosition().then((pos) => {
 | Requires key   | API key | –      |    –     | token  |
 
 See runnable demos in [`examples/`](examples) (Leaflet & MapLibre need no key).
+
+## Documentation
+
+Interactive docs live in [`docs/`](docs) and are deployed to GitHub Pages on every
+push to `master`. Preview locally with:
+
+```sh
+npm run docs:preview
+```
+
+## Releasing
+
+Versioning, changelog and npm publishing use [Changesets](https://github.com/changesets/changesets).
+
+1. Record your change: `npm run changeset` (pick patch/minor/major + a summary), commit the generated file.
+2. On push to `master`, CI opens a **"Version Packages"** PR that bumps the version and updates [`CHANGELOG.md`](CHANGELOG.md).
+3. Merging that PR publishes to npm and creates a GitHub release.
+
+`CHANGELOG.md` is generated automatically — don't edit it by hand.

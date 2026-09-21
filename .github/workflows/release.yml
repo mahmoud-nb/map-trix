@@ -1,0 +1,50 @@
+name: "🚀 release"
+
+on:
+    push:
+        branches:
+          - master
+
+# Needed by the Changesets action to open the "Version Packages" PR,
+# push tags / create GitHub releases, and publish with npm provenance.
+permissions:
+    contents: write
+    pull-requests: write
+    id-token: write
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+    release:
+        name: 🚀 release
+        runs-on: ubuntu-latest
+        steps:
+            - name: 📚 checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+            - name: 🟢 node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  registry-url: https://registry.npmjs.org
+                  cache: npm
+            - name: 📦 install
+              run: npm ci
+            - name: 🔎 lint
+              run: npm run lint
+            - name: 🧪 type check
+              run: npm run tsc
+            # Opens/updates a "Version Packages" PR when changesets exist.
+            # When that PR is merged, runs `release` to publish to npm.
+            - name: 🦋 changesets
+              uses: changesets/action@v1
+              with:
+                  version: npm run version-packages
+                  publish: npm run release
+                  commit: "chore: version packages"
+                  title: "chore: version packages"
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+                  NPM_CONFIG_PROVENANCE: "true"
