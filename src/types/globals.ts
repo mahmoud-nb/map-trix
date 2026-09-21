@@ -3,10 +3,12 @@ export type Position = {
     longitude: number
 }
 
-export type customMarkerOptions = google.maps.MarkerOptions & {
+export type customMarkerOptions = {
     latitude: number
     longitude: number
     content?: string
+    title?: string
+    draggable?: boolean
 }
 
 export type MapTrixConfig = {

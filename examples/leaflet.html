@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Map-Trix — Leaflet</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; }
+    #map { height: 70vh; }
+    .bar { display: flex; gap: 8px; padding: 10px; flex-wrap: wrap; align-items: center; }
+    button { padding: 6px 12px; cursor: pointer; }
+    #log { padding: 0 10px 10px; font-size: 13px; color: #333; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "leaflet": "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/+esm",
+      "leaflet.markercluster": "https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/+esm",
+      "map-trix": "../dist/index.esm.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <h3 style="padding:10px;margin:0">Map-Trix · Leaflet provider</h3>
+  <div class="bar">
+    <button id="route">Trace route (OSRM)</button>
+    <button id="cluster">Toggle clustering</button>
+    <button id="nearest">Nearest to center</button>
+  </div>
+  <div id="map"></div>
+  <div id="log"></div>
+
+  <script type="module">
+    import { createMap, StoreLocator } from 'map-trix'
+
+    const log = (msg) => { document.getElementById('log').textContent = msg }
+
+    const stores = [
+      { position: { lat: 48.8566, lng: 2.3522 }, popup: '<b>Paris center</b>', data: { name: 'Center' } },
+      { position: { lat: 48.8738, lng: 2.2950 }, popup: '<b>Arc de Triomphe</b>', data: { name: 'Arc' } },
+      { position: { lat: 48.8584, lng: 2.2945 }, popup: '<b>Eiffel Tower</b>', data: { name: 'Eiffel' } },
+      { position: { lat: 48.8606, lng: 2.3376 }, popup: '<b>Louvre</b>', data: { name: 'Louvre' } },
+      { position: { lat: 48.8530, lng: 2.3499 }, popup: '<b>Notre-Dame</b>', data: { name: 'Notre-Dame' } },
+    ]
+
+    const map = await createMap({
+      provider: 'leaflet',
+      container: '#map',
+      center: { lat: 48.8566, lng: 2.3522 },
+      zoom: 12,
+    })
+    window.__map = map
+
+    const locator = new StoreLocator(map, {
+      locations: stores,
+      onSelect: ({ location }) => log('Selected: ' + location.data.name),
+    })
+
+    let clustered = false
+    document.getElementById('cluster').onclick = async () => {
+      if (clustered) { map.disableClustering(); log('Clustering off') }
+      else { await map.enableClustering({ radius: 60 }); log('Clustering on') }
+      clustered = !clustered
+    }
+
+    document.getElementById('nearest').onclick = () => {
+      const [n] = locator.findNearest(map.getCenter(), 1)
+      log('Nearest: ' + n.location.data.name + ' (' + Math.round(n.distance) + ' m)')
+    }
+
+    document.getElementById('route').onclick = async () => {
+      log('Routing…')
+      try {
+        const r = await map.traceDirection({ lat: 48.8584, lng: 2.2945 }, { lat: 48.8530, lng: 2.3499 })
+        log('Route: ' + (r.distance / 1000).toFixed(2) + ' km · ' + Math.round(r.duration / 60) + ' min')
+      } catch (e) { log('Routing failed: ' + e.message) }
+    }
+
+    log('Ready — ' + stores.length + ' stores loaded')
+  </script>
+</body>
+</html>

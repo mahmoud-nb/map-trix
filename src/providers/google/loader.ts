@@ -1,3 +1,5 @@
+import { loadScript } from '../../utils/dom-loader'
+
 export interface googleMapsOptions {
   key?: string
   language?: string
@@ -8,7 +10,7 @@ export interface googleMapsOptions {
 
 const GOOGLE_MAPS_BASE_URL = 'https://maps.googleapis.com/maps/api/js'
 
-function resolveApiKey(apiKey: string | null, options: googleMapsOptions): string | null {
+function resolveApiKey(apiKey: string | null | undefined, options: googleMapsOptions): string | null {
   if (apiKey) return apiKey
   if (options.key) return options.key
   if (typeof localStorage !== 'undefined') {
@@ -17,13 +19,14 @@ function resolveApiKey(apiKey: string | null, options: googleMapsOptions): strin
   return null
 }
 
-export async function _loadGoogleMapsScript(
+/** Inject the Google Maps JS API script. Idempotent (skips if already present). */
+export async function loadGoogleMapsScript(
   apiKey: string | null = null,
   options: googleMapsOptions = {},
-  callback?: () => void,
 ): Promise<void> {
-  const key = resolveApiKey(apiKey, options)
+  if (typeof google === 'object' && google?.maps) return
 
+  const key = resolveApiKey(apiKey, options)
   if (!key) {
     console.warn('[map-trix] No Google Maps API key provided. The map may fail to load.')
   }
@@ -38,32 +41,5 @@ export async function _loadGoogleMapsScript(
   const query = params.toString()
   const src = query ? `${GOOGLE_MAPS_BASE_URL}?${query}` : GOOGLE_MAPS_BASE_URL
 
-  await _loadScript(src)
-
-  callback?.()
-}
-
-export function _loadScript(src: string): Promise<HTMLScriptElement> {
-  return new Promise((resolve, reject) => {
-    // Avoid injecting the same script twice.
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${src}"]`)
-    if (existing) {
-      resolve(existing)
-      return
-    }
-
-    const script = document.createElement('script')
-    script.type = 'text/javascript'
-    script.src = src
-    script.defer = true
-    script.async = true
-
-    // Resolve the promise once the script is loaded.
-    script.addEventListener('load', () => resolve(script))
-
-    // Reject if the script fails to load.
-    script.addEventListener('error', () => reject(new Error(`${src} failed to load.`)))
-
-    document.head.appendChild(script)
-  })
+  await loadScript(src)
 }

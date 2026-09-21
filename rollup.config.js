@@ -4,20 +4,39 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodePolyfills from 'rollup-plugin-polyfill-node'
 
+// Underlying map SDKs are optional peer dependencies — never bundle them.
+const external = [
+  'leaflet',
+  'leaflet.markercluster',
+  'maplibre-gl',
+  'mapbox-gl',
+  '@googlemaps/markerclusterer',
+]
+
 export default {
-  input: 'src/index.ts',
+  input: {
+    index: 'src/index.ts',
+    'providers/google/index': 'src/providers/google/index.ts',
+    'providers/leaflet/index': 'src/providers/leaflet/index.ts',
+    'providers/maplibre/index': 'src/providers/maplibre/index.ts',
+    'providers/mapbox/index': 'src/providers/mapbox/index.ts',
+  },
+  external,
   output: [
     {
-      name: 'map-trix',
-      file: 'dist/index.js',
-      format: 'umd',
+      dir: 'dist',
+      format: 'esm',
+      entryFileNames: '[name].esm.js',
+      chunkFileNames: 'chunks/[name]-[hash].esm.js',
       sourcemap: true,
     },
     {
-      name: 'map-trix',
-      file: 'dist/index.esm.js',
-      format: 'esm',
+      dir: 'dist',
+      format: 'cjs',
+      entryFileNames: '[name].js',
+      chunkFileNames: 'chunks/[name]-[hash].js',
       sourcemap: true,
+      exports: 'named',
     },
   ],
   plugins: [
@@ -30,6 +49,4 @@ export default {
       sourceMap: true,
     }),
   ],
-  // specify external modules if any are used in your library
-  // external: [],
 }
