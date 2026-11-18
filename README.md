@@ -1,6 +1,7 @@
 # Map Trix : one API for every map
 
 [![npm](https://img.shields.io/npm/v/map-trix)](https://www.npmjs.com/package/map-trix)
+[![TypeScript: strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/tsconfig/#strict)
 
 Map-Trix gives you **a single, easy-to-use interface** to display and customize
 maps — markers, popups, store locators, routes and clustering — on top of the
